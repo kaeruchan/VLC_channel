@@ -1,6 +1,6 @@
 # VLC Channel
 
-This channel model is based on the following paper:
+This channel model is based on the measurement of following paper:
 ```
 M. D. Soltani, A. A. Purwita, Z. Zeng, H. Haas, and M. Safari, 
 ``Modeling the random orientation of mobile devices: Measurement, analysis and LiFi use case,'' 
