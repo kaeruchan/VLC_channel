@@ -1,24 +1,52 @@
 __precompile__()
 
-module Channel
+module Channels
 
     import Base
-    import Distributions: Laplace, Gaussian
-    import LinearAlgebra: cross, dot
+    import Distributions: Laplace, Gaussian, Uniform
+    import LinearAlgebra: cross, dot, norm
     export vlc_channel
 
-    function vlc_channel(psi::Float64, Psi_c::Float64, phi::Float64, phi_1_2::Float64, d::Float64, A::Float64, N_b::Float64)
-        m = -log(2) / log(cos(phi_1_2))
-        rect = (psi >= 0 && psi <= Psi_c ? 1.0 : 0.0)
-        return (m+1) * A * N_b / 2 * pi * d^2 * cos(phi)^m * cos(psi) * rect
+    function vlc_channel(ψ::Float64, Ψ::Float64, θ::Float64, θ₀₅::Float64, d::Float64, A::Float64, Nb::Float64)
+        m = -log(2) / log(cos(θ₀₅))
+        rect = (ψ >= 0 && ψ <= Ψ ? 1.0 : 0.0)
+        return (m+1) * A * Nb / (2 * pi * d^2) * cos(θ)^m * cos(ψ) * rect
     end
+
+    export phi_rad
+
+    function phi_rad(
+        led_location,
+        user_location,
+        theta_deg,
+        omega_deg)
+
+        # generate theta_deg variance
+        # theta_rad = deg2rad(theta_deg(type,type_fit))
+        theta_rad = deg2rad(theta_deg)
+        # omega_rad = deg2rad(omega_deg())
+        omega_rad = deg2rad(omega_deg)
+        dist = norm(led_location - user_location)
+
+        phi = acos(
+            (led_location[1] - user_location[1]) / dist 
+            * sin(theta_rad) * cos(omega_rad) 
+            + 
+            (led_location[2] - user_location[2]) / dist 
+            * sin(theta_rad) * sin(omega_rad)
+            +
+            (led_location[3] - user_location[3]) / dist
+            * cos(theta_rad))
+        return phi
+    end
+
 
     export theta_deg
 
     function theta_deg(type::String, type_fit::String = "opt")
 
         #=
-            The angle measurement based on Soltani's paper.
+            The polar angle based on Soltani's paper.
             M. D. Soltani, A. A. Purwita, Z. Zeng, H. Haas, and M. Safari, 
             ``Modeling the random orientation of mobile devices: Measurement, analysis and LiFi use case,''
             IEEE Trans. Commun., vol. 67, no. 3, pp. 2157- 2172, Mar. 2019.
@@ -69,6 +97,12 @@ module Channel
         end
     end
 
+    export omega_deg
+
+    function omega_deg()
+        return rand(Uniform(-180,180))
+    end
+
     export shadow_check
 
     function shadow_check(source::Array, device::Array, user::Array, radius_user::Float64)
@@ -116,6 +150,6 @@ module Channel
     end
 end
 
-import ..Channel: theta_deg
+# import ..Channel: theta_deg
 
-println(theta_deg("walk"))
+# println(theta_deg("walk"))
