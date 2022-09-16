@@ -21,5 +21,5 @@ module Parameters
 
     export trajectory_length, N0
     trajectory_length = 120
-    N0 = -98.39
+    N0 = -98.82
 end

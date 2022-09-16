@@ -5,6 +5,27 @@ module Channels
     import Base
     import Distributions: Laplace, Gaussian, Uniform
     import LinearAlgebra: cross, dot, norm
+
+    export vlc_channel_with_shadow
+
+    function vlc_channel_with_shadow(
+        ψ::Float64, 
+        Ψ::Float64, 
+        θ::Float64, 
+        θ₀₅::Float64, 
+        d::Float64, 
+        A::Float64, 
+        Nb::Float64,
+        source::Array, 
+        device::Array, 
+        user_top::Array, 
+        radius_user::Float64
+        )
+        channel = vlc_channel(ψ,Ψ,θ, θ₀₅,d,A,Nb)
+        shadow_blockage = shadow_check(source, device, user_top, radius_user)
+        return channel * shadow_blockage
+    end
+
     export vlc_channel
 
     function vlc_channel(ψ::Float64, Ψ::Float64, θ::Float64, θ₀₅::Float64, d::Float64, A::Float64, Nb::Float64)
@@ -105,7 +126,7 @@ module Channels
 
     export shadow_check
 
-    function shadow_check(source::Array, device::Array, user::Array, radius_user::Float64)
+    function shadow_check(source::Array, device::Array, user_top::Array, radius_user::Float64)
         #=
             The function check whether shadow blocked.
         =#
@@ -115,9 +136,12 @@ module Channels
 
         result = 1
 
-        B1 = Array{Float64}([user[1] + r * cos(theta), user[2] - r * sin(theta), user[3]])
-        B2 = Array{Float64}([user[1] - r * cos(theta), user[2] + r * sin(theta), user[3]])
-        B3 = Array{Float64}([user[1] - r * cos(theta), user[2] + r * sin(theta), 0])
+        B1 = Array{Float64}([user_top[1] + r * cos(theta), 
+            user_top[2] - r * sin(theta), 
+            user_top[3]])
+        B2 = Array{Float64}([user_top[1] - r * cos(theta), 
+        user_top[2] + r * sin(theta), user_top[3]])
+        B3 = Array{Float64}([user_top[1] - r * cos(theta), user_top[2] + r * sin(theta), 0])
         B4 = Array{Float64}([user[1] + r * cos(theta), user[2] - r * sin(theta), 0])
 
         s_d_vector = (device - source) ./ (sqrt(sum(abs2, device-source)))

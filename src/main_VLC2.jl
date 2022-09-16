@@ -2,6 +2,7 @@
 using Base
 using ArgParse
 using LinearAlgebra
+using Distributions: Uniform
 
 # local libraries
 include("ProjectVLC.jl")
@@ -111,10 +112,10 @@ function main()
             eve_d_matrix = zeros(led_num)
             user_psi_matrix = zeros(user_num,led_num)
             user_theta_rad = zeros(user_num,led_num)
-
+            user_omega_deg = rand(Uniform(-180,180),user_num)
             for n in 1:user_num
                 for i in 1:led_num
-                    user_psi_matrix[n,i] = phi_rad(led[i,:],user[n,:],theta_deg("walk","opt"),omega_deg())
+                    user_psi_matrix[n,i] = phi_rad(led[i,:],user[n,:],theta_deg("walk","opt"),user_omega_deg[n])
                     user_d_matrix[n,i] = norm(led[i,:] - user[n,:])
                     user_theta_rad[n,i] = acos((height-device_height) / user_d_matrix[n,i])
                 end
@@ -124,9 +125,10 @@ function main()
             # eve_theta_rad = asin.((3.2 - 0.85)./ eve_d_matrix)
             eve_theta_rad = zeros(led_num)
             eve_psi_matrix = zeros(led_num)
+            eve_omega_deg = rand(Uniform(-180,180))
             for i in 1:led_num
                 eve_d_matrix[i] = norm(led[i,:]-eve)
-                eve_psi_matrix[i] = phi_rad(led[i,:],eve,theta_deg("walk","opt"),omega_deg())
+                eve_psi_matrix[i] = phi_rad(led[i,:],eve,theta_deg("walk","opt"),eve_omega_deg)
                 eve_theta_rad[i] = acos((height - device_height) / eve_d_matrix[i])
             end   
             
@@ -143,8 +145,8 @@ function main()
                 # set index of the user number
 
                 # initial the SINR calculation
-                user_SINR = 0
-                eve_SINR = 0
+                # user_SINR = 0
+                # eve_SINR = 0
                 
 
                 user_num_per_led = zeros(led_num)
@@ -175,15 +177,19 @@ function main()
                         # select
                         led_indice_user = argmax(h_user[n,:]) # get the indice of maximum channel
                         # led_indice_eve = argmax(h_eve)
-                        user_SINR += (h_user[n,led_indice_user] * ps * β_sum_per_led[i] 
+                        user_SINR = (h_user[n,led_indice_user] * ps * β_sum_per_led[i] 
                             / (h_user[n,led_indice_user] * ps * (1 - β_sum_per_led[i]) 
                                 + (sum(h_user[n,:]) - h_user[n,led_indice_user]) * ps + n0))
+                        capacity_user += 0.5 * log2(1 + user_SINR)
                         # eve
                         if h_eve[led_indice_user] != 0.0
-                            eve_SINR += (h_eve[led_indice_user] * ps * β_sum_per_led[i]
+                            eve_SINR = (h_eve[led_indice_user] * ps * β_sum_per_led[i]
                             / (h_eve[led_indice_user] * ps * (1 - β_sum_per_led[i]) 
                                 + (sum(h_eve) - h_eve[led_indice_user]) * ps + n0))
+                        else
+                            eve_SINR = 0.0
                         end
+                        capacity_eve += 0.5 * log2(1 + eve_SINR)
                     end
 
                     # eve
@@ -198,8 +204,8 @@ function main()
                 end
 
                 
-                capacity_user += 0.5 * log2(1 + user_SINR)
-                capacity_eve += 0.5 * log2(1 + eve_SINR)
+                # capacity_user += 0.5 * log2(1 + user_SINR)
+                # capacity_eve += 0.5 * log2(1 + eve_SINR)
             end
             
             sum_user += capacity_user        
@@ -221,13 +227,13 @@ function main()
     end
 
     # output file
-    path = string("results/case2/", "user_type", u_type, "/")
+    path = string("results/case2/", "Ps=", Int(Ps), "/", "user_type", u_type, "/")
     file_user = string("VLC_user.txt")
     file_eve = string("VLC_eve.txt")
     file_sec = string("VLC_sec.txt")
     
     if ispath(path) == false
-        mkdir(path)
+        mkpath(path)
     end
     cd(path)
 

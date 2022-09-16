@@ -2,7 +2,7 @@
 using Base
 using ArgParse
 using LinearAlgebra
-using Distributions: Uniformw
+
 # local libraries
 include("ProjectVLC.jl")
 
@@ -111,10 +111,10 @@ function main()
             eve_d_matrix = zeros(led_num)
             user_psi_matrix = zeros(user_num,led_num)
             user_theta_rad = zeros(user_num,led_num)
-            user_omega_deg = rand(Uniform(-180,180),user_num)
+
             for n in 1:user_num
                 for i in 1:led_num
-                    user_psi_matrix[n,i] = phi_rad(led[i,:],user[n,:],theta_deg("walk","opt"),user_omega_deg[n])
+                    user_psi_matrix[n,i] = phi_rad(led[i,:],user[n,:],theta_deg("walk","opt"),omega_deg())
                     user_d_matrix[n,i] = norm(led[i,:] - user[n,:])
                     user_theta_rad[n,i] = acos((height-device_height) / user_d_matrix[n,i])
                 end
@@ -124,10 +124,9 @@ function main()
             # eve_theta_rad = asin.((3.2 - 0.85)./ eve_d_matrix)
             eve_theta_rad = zeros(led_num)
             eve_psi_matrix = zeros(led_num)
-            eve_omega_deg = rand(Uniform(-180,180))
             for i in 1:led_num
                 eve_d_matrix[i] = norm(led[i,:]-eve)
-                eve_psi_matrix[i] = phi_rad(led[i,:],eve,theta_deg("walk","opt"),eve_omega_deg)
+                eve_psi_matrix[i] = phi_rad(led[i,:],eve,theta_deg("walk","opt"),omega_deg())
                 eve_theta_rad[i] = acos((height - device_height) / eve_d_matrix[i])
             end   
             
@@ -136,19 +135,23 @@ function main()
                 h_eve[i] = vlc_channel(eve_psi_matrix[i],deg2rad(ψ_c),eve_theta_rad[i],deg2rad(ψ_05),eve_d_matrix[i],A_PD,Nb)
             end
             
-            h_user = zeros(user_num,led_num)
+            h_user = zeros(user_num,led_num) 
+            # initial the channel gain matrix
             capacity_user = 0
             capacity_eve = 0
             for n in 1:user_num
+                # set index of the user number
+
+                # initial the SINR calculation
                 # user_SINR = 0
                 # eve_SINR = 0
-                if n < user_num
-                    β_sum = (1 - β)^(n-1) - (1 - β)^n
-                else
-                    β_sum = (1 - β)^n
-                end
-                # println(β_sum)
+                
+
+                user_num_per_led = zeros(led_num)
+                β_sum_per_led = zeros(led_num)
                 for i in 1:led_num
+                    # set index of the LED number 
+                    # get the value of the channel gain
                     h_user[n,i] = vlc_channel(
                         user_psi_matrix[n,i],
                         deg2rad(ψ_c),
@@ -157,12 +160,48 @@ function main()
                         user_d_matrix[n,i],
                         A_PD,
                         Nb)
-                    user_SINR = h_user[n,i] * ps * β_sum / (h_user[n,i] * ps * (1 - β_sum) + n0)
-                    capacity_user += 0.5 * log2(1 + user_SINR)
 
-                    eve_SINR = h_eve[i] * ps * β_sum / (h_eve[i] * ps * (1 - β_sum) + n0)
-                    capacity_eve += 0.5 * log2(1 + eve_SINR)
+                    # Each floor set the NOMA rules based on user number in its coverage area
+
+                    # user
+                    user_num_per_led[i] = length(filter(!iszero,h_user[:,i])) # get the usernumber of each led
+                    for s in 1:user_num_per_led[i]
+                        if s < user_num_per_led[i]
+                            β_sum_per_led[i] = (1 - β)^(s-1) - (1 - β)^s
+                        else
+                            β_sum_per_led[i] = (1 - β)^s
+                        end
+                        
+                        # select
+                        led_indice_user = argmax(h_user[n,:]) # get the indice of maximum channel
+                        # led_indice_eve = argmax(h_eve)
+                        user_SINR = (h_user[n,led_indice_user] * ps * β_sum_per_led[i] 
+                            / (h_user[n,led_indice_user] * ps * (1 - β_sum_per_led[i]) 
+                                + (sum(h_user[n,:]) - h_user[n,led_indice_user]) * ps + n0))
+                        capacity_user += 0.5 * log2(1 + user_SINR)
+                        # eve
+                        if h_eve[led_indice_user] != 0.0
+                            eve_SINR = (h_eve[led_indice_user] * ps * β_sum_per_led[i]
+                            / (h_eve[led_indice_user] * ps * (1 - β_sum_per_led[i]) 
+                                + (sum(h_eve) - h_eve[led_indice_user]) * ps + n0))
+                        else
+                            eve_SINR = 0.0
+                        end
+                        capacity_eve += 0.5 * log2(1 + eve_SINR)
+                    end
+
+                    # eve
+                    # if user_num_per_led[i] != 0
+                    #     eve_SINR += h_eve[i] * ps * β_sum / (h_eve[i] * ps * (1 - β_sum) + n0)
+                    # end
+                    
+                    # user_SINR += h_user[n,i] * ps * β_sum / (h_user[n,i] * ps * (1 - β_sum) + n0)
+                    # eve_SINR += h_eve[i] * ps * β_sum / (h_eve[i] * ps * (1 - β_sum) + n0)
+
+                    # SINR will be calculated as the maximum of two selection
                 end
+
+                
                 # capacity_user += 0.5 * log2(1 + user_SINR)
                 # capacity_eve += 0.5 * log2(1 + eve_SINR)
             end
@@ -186,7 +225,7 @@ function main()
     end
 
     # output file
-    path = string( "results/case1/Ps=", Int(Ps), "/user_type", u_type, "/")
+    path = string("results/case3/Ps=", Int(Ps), "/user_type", u_type, "/")
     file_user = string("VLC_user.txt")
     file_eve = string("VLC_eve.txt")
     file_sec = string("VLC_sec.txt")
