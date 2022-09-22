@@ -1,3 +1,5 @@
+__precompile__()
+
 module Parameters
 
     export ψ_c, ψ_05, I_DC, Nb
@@ -16,10 +18,19 @@ module Parameters
     β = 0.6
 
     export height, device_height
-    height = 3.2
+    height = 3.95
     device_height = 0.85
 
-    export trajectory_length, N0
-    trajectory_length = 120
+    export N0
+    # trajectory_length = 120
     N0 = -98.82
+
+    export height_user_body, shoulder_width, device_body
+    height_user_body = 1.6
+    shoulder_width = 0.2
+    device_body = 0.4
+
+    export x_eve, y_eve
+    x_eve = 1:0.5:39
+    y_eve = 1:0.5:39
 end

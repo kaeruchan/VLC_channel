@@ -126,23 +126,25 @@ module Channels
 
     export shadow_check
 
-    function shadow_check(source::Array, device::Array, user_top::Array, radius_user::Float64)
+    function shadow_check(source, device, UserCoorTop, radius_user::Float64)
         #=
             The function check whether shadow blocked.
         =#
+        
+        
         theta = atan(abs(device[2] - source[2]) / abs(device[1] - source[1]))
 
         r = radius_user
 
         result = 1
 
-        B1 = Array{Float64}([user_top[1] + r * cos(theta), 
-            user_top[2] - r * sin(theta), 
-            user_top[3]])
-        B2 = Array{Float64}([user_top[1] - r * cos(theta), 
-        user_top[2] + r * sin(theta), user_top[3]])
-        B3 = Array{Float64}([user_top[1] - r * cos(theta), user_top[2] + r * sin(theta), 0])
-        B4 = Array{Float64}([user[1] + r * cos(theta), user[2] - r * sin(theta), 0])
+        B1 = Array{Float64}([UserCoorTop[1] + r * cos(theta), 
+            UserCoorTop[2] - r * sin(theta), 
+            UserCoorTop[3]])
+        B2 = Array{Float64}([UserCoorTop[1] - r * cos(theta), 
+        UserCoorTop[2] + r * sin(theta), UserCoorTop[3]])
+        B3 = Array{Float64}([UserCoorTop[1] - r * cos(theta), UserCoorTop[2] + r * sin(theta), 0])
+        B4 = Array{Float64}([UserCoorTop[1] + r * cos(theta), UserCoorTop[2] - r * sin(theta), 0])
 
         s_d_vector = (device - source) ./ (sqrt(sum(abs2, device-source)))
 
@@ -153,11 +155,11 @@ module Channels
 
         # intersection
         s_d_vector = device - source
-        P1 = _dot_coordination(device, user, s_d_vector, norm_vec_user_h)
-        P2 = _dot_coordination(device, user, s_d_vector, norm_vec_user_v)
+        P1 = _dot_coordination(device, UserCoorTop, s_d_vector, norm_vec_user_h)
+        P2 = _dot_coordination(device, UserCoorTop, s_d_vector, norm_vec_user_v)
 
         # judge
-        if (P1[1] - user[1]) ^ 2 + (P1[2] - user[2]) ^ 2 < r ^ 2
+        if (P1[1] - UserCoorTop[1]) ^ 2 + (P1[2] - UserCoorTop[2]) ^ 2 < r ^ 2
             result = 0
         elseif dot(cross((B2 - B1),(P2 - B1)),cross((B4 - B3), (P2 - B3))) >= 0 && dot(cross((B2 - B1), (P2 - B1)), cross((B4 - B3), (P2 - B3))) >= 0
             result = 0
@@ -167,9 +169,13 @@ module Channels
         return result
     end
 
-    function _dot_coordination(m::Array{Float64}, n::Array{Float64}, vl::Array{Float64}, vp::Array{Float64})
+    function _dot_coordination(m, n, vl, vp)
         MN = n - m
-        P = M + vl * (MN * vp / vp * vl)
+        P = m + vl * (dot(MN,vp) / dot(vp,  vl))
+        # println("vl=")
+        # println(vl)
+        # println("vp=")
+        # println(vp)
         return P
     end
 end

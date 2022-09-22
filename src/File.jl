@@ -2,8 +2,8 @@ module FileOutput
 
     import Base: Filesystem
 
-    export Output
-    function Output(filename, x, x_range, y)
+    export Output_2d
+    function Output_2d(filename, x, x_range, y)
         fn = filename
         # makefiles if not exist
         if isfile(fn) == false
@@ -14,6 +14,25 @@ module FileOutput
         io = open(fn, "w")
         for i in 1:x_range
             println(io, string(x[i], " ", y[i]))
+        end
+        close(io)
+        return nothing
+    end
+    
+    export Output_3d
+    function Output_3d(filename, x, x_range, y, y_range, z)
+        fn = filename
+        # makefiles if not exist
+        if isfile(fn) == false
+            # mkpath(directory)
+            touch(string(fn))
+        end
+        # cd(directory)
+        io = open(fn, "w")
+        for i in 1:x_range
+            for j in 1:y_range
+                println(io, string(x[i], " ", y[j], " ", z[i,j]))
+            end
         end
         close(io)
         return nothing
