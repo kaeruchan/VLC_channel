@@ -7,89 +7,25 @@ using Distributions: Uniform
 include("ProjectVLC.jl")
 
 import .ProjectVLC.Channels: phi_rad, vlc_channel, theta_deg, shadow_check
-import .ProjectVLC.Parameters: ψ_c, ψ_05, I_DC, Nb, u_r, A_PD, β, height, device_height, N0, height_user_body, shoulder_width, x_eve, y_eve
+import .ProjectVLC.Parameters: ψ_c, ψ_05, I_DC, Nb, u_r, A_PD, β, η, height, device_height, N0, height_user_body, shoulder_width, x_eve, y_eve, led, user_coop
 import .ProjectVLC.FileOutput: Output_3d
 import .ProjectVLC.FileInput: file_read
-
-function parse_commandline()
-    s = ArgParseSettings()
-
-    @add_arg_table s begin
-        "--power"
-            help = "The transmission power."
-            # arg_type = Float64
-            required = true
-        "--usertype", "-u"
-            help = "User type"
-            # arg_type = Int64
-            required = true
-        "--period"
-            help = "simulation period"
-            # arg_type = Int64
-            required = true
-    end
-
-    return parse_args(s)
-end
-
-# function trajectory_pos(
-#     total_length,
-#     start_pos, 
-#     speed,
-#     current_time)
-#     #=
-#         Get the current position for the square around
-#     =#
-    
-#     current_pos = copy(start_pos)
-#     one_length = total_length * 0.25
-#     total_time = total_length / speed
-
-#     # The trajectory is square with clockwise.
-
-#     if current_time <= total_time * 0.25
-#         current_pos[2] += current_time * speed
-#     elseif current_time > total_time * 0.25 && current_time <= total_time * 0.5
-#         current_pos[2] += one_length
-#         current_pos[1] += (current_time - total_time * 0.25) * speed
-#     elseif current_time > total_time * 0.5 && current_time <= total_time * 0.75
-#         current_pos[2] += one_length - (current_time - total_time * 0.5) * speed
-#         current_pos[1] += one_length
-#     elseif current_time > total_time * 0.75 && current_time <= total_time * 1
-#         current_pos[1] += one_length - (current_time - total_time * 0.75) * speed
-#     else
-#         throw(DomainError(current_time,
-#             "Current time is bigger than (total_length / speed)"))
-#     end
-
-#     return current_pos
-
-# end
-
-
-function dbm2watt(dbm)
-    return 10 ^ ((dbm - 30)/10)
-end
+import .ProjectVLC.Functions: dbm2watt, parse_commandline
 
 
 function main()
     parse_args = parse_commandline()
     Ps = parse(Float64, parse_args["power"]) # transmission power
-    # println(Ps)
     u_type = parse(Int64, parse_args["usertype"])
     simulation_loop = parse(Int64, parse_args["period"])
-    # Ps = 10
-    # u_type = 1
-    # simulation_loop = Int64(1e6)
 
-    led = file_read("led")
-    led_num = size(led,1)
-    user = file_read("user",user_type=u_type)
+    user = user_coop(u_type)
     user_num = size(user,1)
+    led_num = size(led,1)
     # eve_init = [5,5,0.85]
     # Power = 10.0 # dbm
     # power = dbm2watt(Power)
-    ps = dbm2watt(Ps)
+    ps = Ps
     n0 = dbm2watt(N0)
 
     capacity_user_sum_simu = zeros(length(x_eve),length(y_eve))
@@ -183,7 +119,7 @@ function main()
                         eve_led_block[i] = 0.0
                     end
 
-                    h_eve[i] = vlc_channel(eve_psi_matrix[i],deg2rad(ψ_c),eve_theta_rad[i],deg2rad(ψ_05),eve_d_matrix[i],A_PD,Nb) * eve_led_block[i]
+                    h_eve[i] = vlc_channel(eve_psi_matrix[i],deg2rad(ψ_c),eve_theta_rad[i],deg2rad(ψ_05),eve_d_matrix[i],A_PD,Nb, η)^2 * eve_led_block[i]
                 end   
                 
                 
@@ -192,10 +128,11 @@ function main()
                 capacity_eve = 0
                 for n in 1:user_num
                     if n < user_num
-                        β_sum = (1 - β)^(n-1) - (1 - β)^n
+                        β_sum = β * (1 - β)^(n-1)
                     else
-                        β_sum = (1 - β)^n
+                        β_sum = (1 - β)^(n - 1)
                     end
+                    # println(β_sum)
                     for i in 1:led_num
                         h_user[n,i] = vlc_channel(
                             user_psi_matrix[n,i],
@@ -204,13 +141,18 @@ function main()
                             deg2rad(ψ_05),
                             user_d_matrix[n,i],
                             A_PD,
-                            Nb) * user_led_block[n,i]
-                        user_SINR = h_user[n,i] * ps * β_sum / (h_user[n,i] * ps * (1 - β_sum) + n0)
-                        capacity_user += 0.5 * log2(1 + user_SINR)
-
-                        eve_SINR = h_eve[i] * ps * β_sum / (h_eve[i] * ps * (1 - β_sum) + n0)
-                        capacity_eve += 0.5 * log2(1 + eve_SINR)
+                            Nb,
+                            η) * user_led_block[n,i]
+                        # println(β_sum)
                     end
+                    user_SINR = (sum(h_user[n,:])^2 * ps * β_sum 
+                    / (sum(h_user[n,:])^2 * ps * ((1 - β)^(n-1) - β_sum) + n0))
+                    # println(user_SINR)
+                    capacity_user += 0.5 * log2(1 + user_SINR)
+
+                    eve_SINR = (sum(h_eve)^2 * ps * β_sum 
+                    / (sum(h_eve)^2 * ps * ((1 - β)^(n-1) - β_sum) + n0))
+                    capacity_eve += 0.5 * log2(1 + eve_SINR)
                     # capacity_user += 0.5 * log2(1 + user_SINR)
                     # capacity_eve += 0.5 * log2(1 + eve_SINR)
                 end
@@ -232,7 +174,9 @@ function main()
     end
 
     # output file
-    path = string("results/case1/Ps=", Int(Ps), "/user_type", u_type, "/")
+    path = string("results/case1/Loop_num=", Int(simulation_loop), 
+        "/Ps=", Float64(Ps), 
+        "/user_type", u_type, "/")
     file_user = string("VLC_user.txt")
     file_eve = string("VLC_eve.txt")
     file_sec = string("VLC_sec.txt")

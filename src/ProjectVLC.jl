@@ -6,5 +6,6 @@ module ProjectVLC
     include("Channels.jl")
     include("Parameters.jl")
     include("File.jl")
-    include("Algorithm.jl")
+    include("Functions.jl")
+    include("Optimal.jl")
 end

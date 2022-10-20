@@ -59,6 +59,23 @@ module FileInput
         mat = readdlm(directory)
         return mat
     end
+
+    export file_read_com
+    function file_read_com(type::String; args...)
+        if type == "led"
+            directory = string("input/light_coordinate_com.txt")
+        elseif type == "user"
+            user_type = string(args[:user_type])
+            directory = string("input/user_coordinate_", 
+            user_type,
+            ".txt")
+        else
+            throw(DomainError(type, "Wrong type"))
+        end
+
+        mat = readdlm(directory)
+        return mat
+    end
 end
 
 # import ..FileInput: file_read

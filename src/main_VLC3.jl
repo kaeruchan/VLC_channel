@@ -1,6 +1,5 @@
 # using libraries
 using Base
-using ArgParse
 using LinearAlgebra
 using Distributions: Uniform
 
@@ -8,90 +7,23 @@ using Distributions: Uniform
 include("ProjectVLC.jl")
 
 import .ProjectVLC.Channels: phi_rad, vlc_channel, theta_deg, shadow_check
-import .ProjectVLC.Parameters: ψ_c, ψ_05, I_DC, Nb, u_r, A_PD, β, height, device_height, N0, height_user_body, shoulder_width, x_eve, y_eve
+import .ProjectVLC.Parameters: ψ_c, ψ_05, I_DC, Nb, u_r, A_PD, β, η, height, device_height, N0, height_user_body, shoulder_width, x_eve, y_eve, led, user_coop
 import .ProjectVLC.FileOutput: Output_3d
 import .ProjectVLC.FileInput: file_read
 import .ProjectVLC.Algorithm: LED_selection
-
-function parse_commandline()
-    s = ArgParseSettings()
-
-    @add_arg_table s begin
-        "--power"
-            help = "The transmission power."
-            # arg_type = Float64
-            required = true
-        "--usertype", "-u"
-            help = "User type"
-            # arg_type = Int64
-            required = true
-        "--period"
-            help = "simulation period"
-            # arg_type = Int64
-            required = true
-    end
-
-    return parse_args(s)
-end
-
-# function trajectory_pos(
-#     total_length,
-#     start_pos, 
-#     speed,
-#     current_time)
-#     #=
-#         Get the current position for the square around
-#     =#
-    
-#     current_pos = copy(start_pos)
-#     one_length = total_length * 0.25
-#     total_time = total_length / speed
-
-#     # The trajectory is square with clockwise.
-
-#     if current_time <= total_time * 0.25
-#         current_pos[2] += current_time * speed
-#     elseif current_time > total_time * 0.25 && current_time <= total_time * 0.5
-#         current_pos[2] += one_length
-#         current_pos[1] += (current_time - total_time * 0.25) * speed
-#     elseif current_time > total_time * 0.5 && current_time <= total_time * 0.75
-#         current_pos[2] += one_length - (current_time - total_time * 0.5) * speed
-#         current_pos[1] += one_length
-#     elseif current_time > total_time * 0.75 && current_time <= total_time * 1
-#         current_pos[1] += one_length - (current_time - total_time * 0.75) * speed
-#     else
-#         throw(DomainError(current_time,
-#             "Current time is bigger than (total_length / speed)"))
-#     end
-
-#     return current_pos
-
-# end
-
-
-function dbm2watt(dbm)
-    return 10 ^ ((dbm - 30)/10)
-end
+import .ProjectVLC.Functions: dbm2watt, parse_commandline
 
 
 function main()
     parse_args = parse_commandline()
     Ps = parse(Float64, parse_args["power"]) # transmission power
-    # println(Ps)
     u_type = parse(Int64, parse_args["usertype"])
     simulation_loop = parse(Int64, parse_args["period"])
-    # Ps = 10
-    # u_type = 1
-    # simulation_loop = Int64(1e6)
 
-    led = file_read("led")
     led_num = size(led,1)
-    user = file_read("user",user_type=u_type)
+    user = user_coop(u_type)
     user_num = size(user,1)
-    # eve_init = [5,5,0.85]
-    # Power = 10.0 # dbm
-    # power = dbm2watt(Power)
-    ps = dbm2watt(Ps)
+    ps = Ps
     n0 = dbm2watt(N0)
 
     capacity_user_sum_simu = zeros(length(x_eve), length(y_eve))
@@ -141,7 +73,6 @@ function main()
                         user[n,2] + sin(user_omega_deg[n]),
                         height_user_body] 
 
-
                     for i in 1:led_num
                         user_psi_matrix[n,i] = phi_rad(led[i,:],user[n,:],theta_deg("walk","opt"),user_omega_deg[n])
                         user_d_matrix[n,i] = norm(led[i,:] - user[n,:])
@@ -164,7 +95,7 @@ function main()
 
                 # calculate distance, phi between eve and led
                 
-
+                h_eve = zeros(led_num)
                 for i in 1:led_num
                     eve_d_matrix[i] = norm(led[i,:]-eve)
                     eve_psi_matrix[i] = phi_rad(led[i,:],eve,theta_deg("walk","opt"),eve_omega_deg)
@@ -172,9 +103,9 @@ function main()
 
 
                     # check block -- eve
-                    for n_body in 1:user_num
+                    for n in 1:user_num
                         # check if any user's body block
-                        if shadow_check(led[i,:],eve,user_body[n_body,:],shoulder_width) == 0.0
+                        if shadow_check(led[i,:],eve,user_body[n,:],shoulder_width) == 0.0
                             eve_led_block[i] = 0.0
                             break
                         end
@@ -183,10 +114,7 @@ function main()
                     if shadow_check(led[i,:],eve,eve_body,shoulder_width) == 0.0
                         eve_led_block[i] = 0.0
                     end
-                end   
-                
-                h_eve = zeros(led_num)
-                for i in 1:led_num
+
                     h_eve[i] = (vlc_channel(
                         eve_psi_matrix[i],
                         deg2rad(ψ_c),
@@ -195,10 +123,11 @@ function main()
                         eve_d_matrix[i],
                         A_PD,
                         Nb,
-                        ) 
+                        η)
                         * eve_led_block[i]
-                        )
-                end
+                    )
+                end   
+                
                 
                 h_user = zeros(user_num,led_num) 
                 # initial the channel gain matrix
@@ -212,8 +141,6 @@ function main()
                     # eve_SINR = 0
                     
 
-                    user_num_per_led = zeros(led_num)
-                    β_sum_per_led = zeros(led_num)
                     for i in 1:led_num
                         # set index of the LED number 
                         # get the value of the channel gain
@@ -224,63 +151,52 @@ function main()
                             deg2rad(ψ_05),
                             user_d_matrix[n,i],
                             A_PD,
-                            Nb) 
+                            Nb,
+                            η)
                             * user_led_block[n,i]
                             )
-
-                        # Each floor set the NOMA rules based on user number in its coverage area
-
-                        # user
-                        user_num_per_led[i] = length(filter(!iszero,h_user[:,i])) # get the usernumber of each led
-                        for s in 1:user_num_per_led[i]
-                            if s < user_num_per_led[i]
-                                β_sum_per_led[i] = (1 - β)^(s-1) - (1 - β)^s
-                            else
-                                β_sum_per_led[i] = (1 - β)^s
-                            end
-                            
-                            # select
-                            led_indice_user = argmax(h_user[n,:]) # get the indice of maximum channel
-                            # led_indice_eve = argmax(h_eve)
-                            user_SINR = (h_user[n,led_indice_user] * ps * β_sum_per_led[i] 
-                                / (h_user[n,led_indice_user] * ps * (1 - β_sum_per_led[i]) 
-                                    + (sum(h_user[n,:]) - h_user[n,led_indice_user]) * ps + n0))
-                            capacity_user += 0.5 * log2(1 + user_SINR)
-                            # eve
-                            if h_eve[led_indice_user] != 0.0
-                                eve_SINR = (h_eve[led_indice_user] * ps * β_sum_per_led[i]
-                                / (h_eve[led_indice_user] * ps * (1 - β_sum_per_led[i]) 
-                                    + (sum(h_eve) - h_eve[led_indice_user]) * ps + n0))
-                            else
-                                eve_SINR = 0.0
-                            end
-                            capacity_eve += 0.5 * log2(1 + eve_SINR)
-                        end
-
-                        # eve
-                        # if user_num_per_led[i] != 0
-                        #     eve_SINR += h_eve[i] * ps * β_sum / (h_eve[i] * ps * (1 - β_sum) + n0)
-                        # end
-                        
-                        # user_SINR += h_user[n,i] * ps * β_sum / (h_user[n,i] * ps * (1 - β_sum) + n0)
-                        # eve_SINR += h_eve[i] * ps * β_sum / (h_eve[i] * ps * (1 - β_sum) + n0)
-
-                        # SINR will be calculated as the maximum of two selection
                     end
+                end
+                # Each floor set the NOMA rules based on user number in its coverage area
 
+                # user
+                sum_h_eve = 0
+                for s in eachindex(user_group)
+                    sum_h_eve += sum(h_eve[s_group[s]])
+                end
+                
+                
+                for s in eachindex(user_group)
+                    β_sum = zeros(length(user_group[s]))
                     
-                    # capacity_user += 0.5 * log2(1 + user_SINR)
-                    # capacity_eve += 0.5 * log2(1 + eve_SINR)
+                    # println(user_group[s])
+                    for b in 1:length(user_group[s])
+                        # println(b)
+                        if b < length(user_group[s])
+                            β_sum[b] = β * (1 - β)^(b-1)
+                        else
+                            β_sum[b] = (1 - β)^(b-1)
+                        end
+                    
+                        user_SINR = (sum(h_user[user_group[s][b],s_group[s]])^2 * ps * β_sum[b] 
+                        / (sum(h_user[user_group[s][b],s_group[s]])^2 * ps * ((1-β)^(b-1) - β_sum[b]) + n0))
+                        # println(β_sum[b])
+                        capacity_user += 0.5 * log2(1 + user_SINR)
+                    
+                        # eve
+                        eve_SINR = (sum(h_eve[s_group[s]])^2 * ps * β_sum[b]
+                        / (sum(h_eve[s_group[s]])^2 * ps * ((1-β)^(b-1) - β_sum[b])
+                        + (sum_h_eve - sum(h_eve[s_group[s]])) * ps
+                        + n0))
+                        capacity_eve += 0.5 * log2(1 + eve_SINR)
+                    end
                 end
                 
                 sum_user += capacity_user        
                 sum_eve += capacity_eve
                 sec += max((capacity_user - capacity_eve), 0)
                 print("\r",
-                # "Position = (", eve[1], "," ,eve[2], ",", eve[3], ")",
-                "Length = ", time[time_index], 
-                # ", Capacity_user = ", sum_user / loop_index,
-                # ", Capacity_eve = ", sum_eve / loop_index,
+                "XoYCoordinate = ",[x_eve[x_index], y_eve[y_index]], 
                 ", Secrecy_capacity = ", sec / loop_index,
                 ", Simulation Period = ", loop_index)
             end
@@ -293,7 +209,9 @@ function main()
     end
 
     # output file
-    path = string("results/trajectory/case3/", "Ps=", Int(Ps), "/", "user_type", u_type, "/")
+    path = string("results/case3/Loop_num=", Int(simulation_loop), 
+        "/Ps=", Float64(Ps), 
+        "/user_type", u_type, "/")
     file_user = string("VLC_user.txt")
     file_eve = string("VLC_eve.txt")
     file_sec = string("VLC_sec.txt")
