@@ -24,15 +24,15 @@ module Optimal
             h₍current₎[i] * β[i] * Pₛ 
             / (sum(h₍current₎[i] * β[j] * Pₛ for j in i+1:K) 
             +
-            h₍others₎
+            h₍others₎[i]
             + 
             N₀)) 
             for i in 1:K-1)
             +
             0.5 * log2(1 + h₍current₎[K] * β[K] * Pₛ 
-            / (h₍others₎ + N₀)))
+            / (h₍others₎[K] + N₀)))
         )
-        optimize!(model)
+        JuMP.optimize!(model)
         # println(JuMP.value.(β))
         res = Array(JuMP.value.(β))
         return res

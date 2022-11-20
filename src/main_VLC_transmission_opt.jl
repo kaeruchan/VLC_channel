@@ -39,6 +39,7 @@ function main()
     # secrecy_simu = zeros(length(ps))
 
     user_d_matrix = zeros(user_num,led_num)
+    # eve_d_matrix = zeros(led_num)
     user_psi_matrix = zeros(user_num,led_num)
     user_psi_matrix_est = zeros(user_num,led_num)
     user_body = zeros(user_num,3)
@@ -105,25 +106,25 @@ function main()
                 end
             end
             
-            for i in 1:led_num
-                eve_d_matrix[i] = norm(led[i,:]-eve)
-                # eve_psi_matrix[i] = phi_rad(led[i,:],eve,theta_deg("walk","opt"),eve_omega_deg)
-                # eve_theta_rad[i] = acos((height - device_height) / eve_d_matrix[i])
+            # for i in 1:led_num
+            #     eve_d_matrix[i] = norm(led[i,:]-eve)
+            #     # eve_psi_matrix[i] = phi_rad(led[i,:],eve,theta_deg("walk","opt"),eve_omega_deg)
+            #     # eve_theta_rad[i] = acos((height - device_height) / eve_d_matrix[i])
 
 
-                # check block -- eve
-                for n_body in 1:user_num
-                    # check if any user's body block
-                    if shadow_check(led[i,:],eve,user_body[n_body,:],shoulder_width) == 0.0
-                        eve_led_block[i] = 0.0
-                        break
-                    end
-                end
-                # check if eve's body block
-                if shadow_check(led[i,:],eve,eve_body,shoulder_width) == 0.0
-                    eve_led_block[i] = 0.0
-                end
-            end   
+            #     # check block -- eve
+            #     for n_body in 1:user_num
+            #         # check if any user's body block
+            #         if shadow_check(led[i,:],eve,user_body[n_body,:],shoulder_width) == 0.0
+            #             eve_led_block[i] = 0.0
+            #             break
+            #         end
+            #     end
+            #     # check if eve's body block
+            #     if shadow_check(led[i,:],eve,eve_body,shoulder_width) == 0.0
+            #         eve_led_block[i] = 0.0
+            #     end
+            # end   
 
             
             
@@ -137,7 +138,7 @@ function main()
             for n in 1:user_num
 
                 for i in 1:led_num
-                    h_user[n,i] = vlc_channel(
+                    h_user[n,i] = (vlc_channel(
                         user_psi_matrix[n,i],
                         deg2rad(ψ_c),
                         user_theta_rad[n,i],
@@ -145,11 +146,12 @@ function main()
                         user_d_matrix[n,i],
                         A_PD,
                         Nb,
-                        η) * user_led_block[n,i]
+                        η) 
+                        * user_led_block[n,i])
                     # println(β_sum)
 
                     h_user_est[n,i] = vlc_channel(
-                        user_psi_matrix[n,i],
+                        user_psi_matrix_est[n,i],
                         deg2rad(ψ_c),
                         user_theta_rad[n,i],
                         deg2rad(ψ_05),
@@ -161,8 +163,8 @@ function main()
             end
             β = beta_optimal(
                 user_num,
-                sum(h_user_est,dims=2),
-                0,
+                sum(h_user_est,dims=2).^2,
+                zeros(user_num),
                 ps[ps_index],
                 n0)
             

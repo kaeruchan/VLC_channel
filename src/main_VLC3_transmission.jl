@@ -1,3 +1,5 @@
+__precompile__()
+
 # using libraries
 using Base
 using LinearAlgebra
@@ -31,13 +33,13 @@ function main()
     # secrecy_simu = zeros(length(x_eve), length(y_eve))
 
     user_d_matrix = zeros(user_num,led_num)
-    eve_d_matrix = zeros(led_num)
+    # eve_d_matrix = zeros(led_num)
     user_psi_matrix = zeros(user_num,led_num)
     user_body = zeros(user_num,3)
     user_theta_rad = zeros(user_num,led_num)
-    eve_theta_rad = zeros(led_num)
+    # eve_theta_rad = zeros(led_num)
     eve_body = zeros(3)
-    eve_psi_matrix = zeros(led_num)
+    # eve_psi_matrix = zeros(led_num)
     
     
     s_group, user_group = LED_selection(user,user_num,led,led_num,height,device_height,ψ_c,"deg")
@@ -97,38 +99,38 @@ function main()
 
             # calculate distance, phi between eve and led
             
-            h_eve = zeros(led_num)
-            for i in 1:led_num
-                eve_d_matrix[i] = norm(led[i,:]-eve)
-                eve_psi_matrix[i] = phi_rad(led[i,:],eve,theta_deg("walk","opt"),eve_omega_deg)
-                eve_theta_rad[i] = acos((height - device_height) / eve_d_matrix[i])
+            # h_eve = zeros(led_num)
+            # for i in 1:led_num
+            #     eve_d_matrix[i] = norm(led[i,:]-eve)
+            #     eve_psi_matrix[i] = phi_rad(led[i,:],eve,theta_deg("walk","opt"),eve_omega_deg)
+            #     eve_theta_rad[i] = acos((height - device_height) / eve_d_matrix[i])
 
 
-                # check block -- eve
-                for n in 1:user_num
-                    # check if any user's body block
-                    if shadow_check(led[i,:],eve,user_body[n,:],shoulder_width) == 0.0
-                        eve_led_block[i] = 0.0
-                        break
-                    end
-                end
-                # check if eve's body block
-                if shadow_check(led[i,:],eve,eve_body,shoulder_width) == 0.0
-                    eve_led_block[i] = 0.0
-                end
+            #     # check block -- eve
+            #     for n in 1:user_num
+            #         # check if any user's body block
+            #         if shadow_check(led[i,:],eve,user_body[n,:],shoulder_width) == 0.0
+            #             eve_led_block[i] = 0.0
+            #             break
+            #         end
+            #     end
+            #     # check if eve's body block
+            #     if shadow_check(led[i,:],eve,eve_body,shoulder_width) == 0.0
+            #         eve_led_block[i] = 0.0
+            #     end
 
-                h_eve[i] = (vlc_channel(
-                    eve_psi_matrix[i],
-                    deg2rad(ψ_c),
-                    eve_theta_rad[i],
-                    deg2rad(ψ_05),
-                    eve_d_matrix[i],
-                    A_PD,
-                    Nb,
-                    η)
-                    * eve_led_block[i]
-                )
-            end   
+            #     h_eve[i] = (vlc_channel(
+            #         eve_psi_matrix[i],
+            #         deg2rad(ψ_c),
+            #         eve_theta_rad[i],
+            #         deg2rad(ψ_05),
+            #         eve_d_matrix[i],
+            #         A_PD,
+            #         Nb,
+            #         η)
+            #         * eve_led_block[i]
+            #     )
+            # end   
             
             
             h_user = zeros(user_num,led_num) 
@@ -162,10 +164,10 @@ function main()
             # Each floor set the NOMA rules based on user number in its coverage area
 
             # user
-            sum_h_eve = 0
-            for s in eachindex(user_group)
-                sum_h_eve += sum(h_eve[s_group[s]])
-            end
+            # sum_h_eve = 0
+            # for s in eachindex(user_group)
+            #     sum_h_eve += sum(h_eve[s_group[s]])
+            # end
             
             
             for s in eachindex(user_group)
@@ -186,11 +188,11 @@ function main()
                     capacity_user += 0.5 * log2(1 + user_SINR)
                 
                     # eve
-                    eve_SINR = (sum(h_eve[s_group[s]])^2 * ps[ps_index] * β_sum[b]
-                    / (sum(h_eve[s_group[s]])^2 * ps[ps_index] * ((1-β)^(b-1) - β_sum[b])
-                    + (sum_h_eve - sum(h_eve[s_group[s]])) * ps[ps_index]
-                    + n0))
-                    capacity_eve += 0.5 * log2(1 + eve_SINR)
+                    # eve_SINR = (sum(h_eve[s_group[s]])^2 * ps[ps_index] * β_sum[b]
+                    # / (sum(h_eve[s_group[s]])^2 * ps[ps_index] * ((1-β)^(b-1) - β_sum[b])
+                    # + (sum_h_eve - sum(h_eve[s_group[s]])) * ps[ps_index]
+                    # + n0))
+                    # capacity_eve += 0.5 * log2(1 + eve_SINR)
                 end
             end
             

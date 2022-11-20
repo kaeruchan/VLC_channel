@@ -109,10 +109,10 @@ def main(argv):
 
     axes.set_xlim([0,40])
     axes.set_ylim([0,40])
-    axes.set_zlim(0,5)
+    axes.set_zlim([0,2.5])
     axes.set_yticks(np.arange(0,50,10),size=14)
     axes.set_xticks(np.arange(0,50,10),size=14)
-    axes.set_zticks(np.arange(0,6,1),size=14)
+    axes.set_zticks(np.arange(0,3,0.5),size=14)
     
     # axes.zaxis.set_major_locator(matplotlib.ticker.LinearLocator(10))
     #  A StrMethodFormatter is used automatically

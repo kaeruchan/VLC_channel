@@ -1,5 +1,6 @@
 # using libraries
 using Base
+using Base.Threads
 using ArgParse
 using LinearAlgebra
 using Distributions: Uniform
@@ -50,8 +51,9 @@ function main()
             sum_user = 0
             sum_eve = 0
             sec = 0
+            # loop_index_ato = Atomic{Int}(0)
             for loop_index in 1:simulation_loop
-                
+                # Threads.atomic_add!(loop_index_ato,loop_index)
                 user_led_block = ones(user_num,led_num)
                 eve_led_block = ones(led_num)
                 # calculate distance,phi between users,eve and led

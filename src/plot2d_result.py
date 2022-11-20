@@ -61,17 +61,25 @@ def parser():
     return loop, ps
 
 
-def file_read(case,loop_num,ps,user_type,res_type):
+def file_read(case,loop_num,ps,user_type,res_type,opt=0):
     # x = np.array([])
     # y = np.array([])    
     # z = np.array([])
     x = []
     y = []
-    directory = 'results/case' + str(case) \
-            + '_trans/Loop_num=' + str(loop_num) \
-            + '/Ps_max=' + str(ps) \
-            + '/user_type' + str(user_type) \
-            + '/VLC_' + str(res_type) + '.txt'
+    if opt == 1:
+        directory = 'results/case' + str(case) \
+                + '_trans_opt/Loop_num=' + str(loop_num) \
+                + '/Ps_max=' + str(ps) \
+                + '/user_type' + str(user_type) \
+                + '/VLC_' + str(res_type) + '.txt'
+    else:
+        directory = 'results/case' + str(case) \
+                + '_trans/Loop_num=' + str(loop_num) \
+                + '/Ps_max=' + str(ps) \
+                + '/user_type' + str(user_type) \
+                + '/VLC_' + str(res_type) + '.txt'    
+                
     file_name = open(directory)
     data = file_name.readlines()
 
@@ -101,6 +109,18 @@ def main(argv):
     x_2_1,y_2_1 = file_read(2,loop,ps,1,res)
     x_2_2,y_2_2 = file_read(2,loop,ps,2,res)
     x_2_3,y_2_3 = file_read(2,loop,ps,3,res)
+    x_3_1,y_3_1 = file_read(3,loop,ps,1,res)
+    x_3_2,y_3_2 = file_read(3,loop,ps,2,res)
+    x_3_3,y_3_3 = file_read(3,loop,ps,3,res)
+    x_1_1_opt,y_1_1_opt = file_read(1,loop,ps,1,res,1)
+    x_1_2_opt,y_1_2_opt = file_read(1,loop,ps,2,res,1)
+    x_1_3_opt,y_1_3_opt = file_read(1,loop,ps,3,res,1)
+    x_2_1_opt,y_2_1_opt = file_read(2,loop,ps,1,res,1)
+    x_2_2_opt,y_2_2_opt = file_read(2,loop,ps,2,res,1)
+    x_2_3_opt,y_2_3_opt = file_read(2,loop,ps,3,res,1)
+    x_3_1_opt,y_3_1_opt = file_read(3,loop,ps,1,res,1)
+    x_3_2_opt,y_3_2_opt = file_read(3,loop,ps,2,res,1)
+    x_3_3_opt,y_3_3_opt = file_read(3,loop,ps,3,res,1)
     # x, y = np.meshgrid(x,y)
     # print(z)
 
@@ -171,12 +191,42 @@ def main(argv):
              markersize = 10,
              label = 'Selection, Scenario 3')
     
+    plt.plot(x_3_1,
+             y_3_1,
+             color = matlabcolormap.red,
+             linestyle = ':',
+             marker = 's',
+             markerfacecolor = 'None',
+             linewidth = 2,
+             markersize = 10,
+             label = 'Intelligent, Scenario 1'
+    )
+    plt.plot(x_3_2,
+             y_3_2,
+             color = matlabcolormap.blue,
+             linestyle = ':',
+             marker = 's',
+             markerfacecolor = 'None',
+             linewidth = 2,
+             markersize = 10,
+             label = 'Intelligent, Scenario 2'
+    )
+    plt.plot(x_3_3,
+             y_3_3,
+             color = matlabcolormap.yellow,
+             linestyle = ':',
+             marker = 's',
+             markerfacecolor = 'None',
+             linewidth = 2,
+             markersize = 10,
+             label = 'Intelligent, Scenario 3')
+    
 
     axes.set_xlim([0.1,1])
-    axes.set_ylim([0,10])
+    axes.set_ylim([0,5])
     # axes.set_zlim(0,5)
     plt.xticks(np.arange(0.1,1.1,0.1),fontsize=14)
-    plt.yticks(np.arange(0,12,2),fontsize=14)
+    plt.yticks(np.arange(0,6,1),fontsize=14)
     # axes.set_zticks(np.arange(0,6,1),size=14)
     plt.grid(True, which='major', linestyle = '-', alpha=0.6)
     plt.grid(True, which='minor', linestyle = ':', alpha=0.3)
@@ -186,8 +236,13 @@ def main(argv):
     #  A StrMethodFormatter is used automatically
     # axes.zaxis.set_major_formatter('{x:.02f}')
     # fig.colorbar(surf, shrink=.5, aspect=5)
-
-    axes.legend(loc="upper left", borderaxespad=0, fontsize=12)
+    # box = axes.get_position()
+    # axes.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+    axes.legend(loc="upper left", 
+                borderaxespad=0, 
+                fontsize=10,
+                # bbox_to_anchor=(1, 0.5)
+                )
     axes.set_xlabel('Transmission Power $P_s$~(W)', fontdict={'size': 16})
     axes.set_ylabel('Sum Rate of Users~(bit/hz/sec)', fontdict={'size': 16})
     # if res == 'sec':

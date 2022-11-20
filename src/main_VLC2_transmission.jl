@@ -113,25 +113,12 @@ function main()
                 end
             end   
             
-            # h_eve = zeros(led_num)
-            # for i in 1:led_num
-            #     h_eve[i] = (vlc_channel(
-            #         eve_psi_matrix[i],
-            #         deg2rad(ψ_c),
-            #         eve_theta_rad[i],
-            #         deg2rad(ψ_05),
-            #         eve_d_matrix[i],
-            #         A_PD,
-            #         Nb,
-            #         η)
-            #         * eve_led_block[i]
-            #         )
-            # end
             
             h_user = zeros(user_num,led_num) 
+            h_user_rec = zeros(user_num,led_num)
+            β_sum_per_led = zeros(user_num,led_num)
             # initial the channel gain matrix
             capacity_user = 0
-            capacity_eve = 0
             for n in 1:user_num
                 # set index of the user number
 
@@ -140,11 +127,11 @@ function main()
                 # eve_SINR = 0
                 
 
-                user_num_per_led = zeros(led_num)
-                β_sum_per_led = zeros(led_num)
+                # user_num_per_led = zeros(led_num)
+                # β_sum_per_led = zeros(led_num)
                 for i in 1:led_num
                     # set index of the LED number 
-                    # get the value of the channel gain
+                    # get the value of the channel gain at transmitter side
                     h_user[n,i] = (vlc_channel(
                         user_psi_matrix[n,i],
                         deg2rad(ψ_c),
@@ -154,50 +141,50 @@ function main()
                         A_PD,
                         Nb,
                         η)
-                        * user_led_block[n,i]
                         )
+                    # channel gain at receiver side
+                    h_user_rec[n,i] = h_user[n,i] * user_led_block[n,i]
 
                     # Each floor set the NOMA rules based on user number in its coverage area
 
                     # user
-                    user_num_per_led[i] = length(filter(!iszero,h_user[:,i])) # get the usernumber of each led
-                    for s in 1:user_num_per_led[i]
-                        if s < user_num_per_led[i]
-                            β_sum_per_led[i] = β * (1 - β)^(s-1)
+                    # user_num_per_led[i] = length(filter(!iszero,h_user[:,i])) # get the usernumber of each led
+                    # println(find(h_user[:,i]))
+                    user_indices_cache = findall(!iszero,h_user[:,i])
+                    # println(user_indices_cache)
+
+                    # println(user_num_per_led[i])
+                    length_counter = 0
+                    # println(user_indices_cache)
+                    for s in user_indices_cache
+                        # println(s)
+                        length_counter += 1
+                        if length_counter < length(user_indices_cache)
+                            β_sum_per_led[s,i] = β * (1 - β)^(length_counter-1)
                         else
-                            β_sum_per_led[i] = (1 - β)^(s-1)
+                            β_sum_per_led[s,i] = (1 - β)^(length_counter-1)
                         end
                     end
 
                 end
+
+                # print(β_sum_per_led)
                 # select
-                led_indice_user = argmax(h_user[n,:]) # get the indice of maximum channel
-                # println()
-                # println(led_indice_user)
-                # println(user_num_per_led[led_indice_user])
-                # println(β_sum_per_led[led_indice_user])
-                # println((1 - β)^(user_num_per_led[led_indice_user] - 1) - β_sum_per_led[led_indice_user])
-                # println(sum(h_user[n,:]) - h_user[n,led_indice_user])
-                # led_indice_eve = argmax(h_eve)
-                user_SINR = (h_user[n,led_indice_user]^2 * ps[ps_index] * β_sum_per_led[led_indice_user] 
-                    / (h_user[n,led_indice_user]^2 * ps[ps_index] * ((1 - β)^(user_num_per_led[led_indice_user] - 1) - β_sum_per_led[led_indice_user]) 
-                        + (sum(h_user[n,:]) - h_user[n,led_indice_user])^2 * ps[ps_index] + n0))
+                led_indice_user = argmax(h_user_rec[n,:]) # get the LED indice of maximum channel
+                # println(n)
+                # println(β_sum_per_led[n,led_indice_user])
+                # println(sum(β_sum_per_led[n+1:user_num,led_indice_user]))
+                user_SINR = (h_user_rec[n,led_indice_user]^2 
+                    * ps[ps_index] 
+                    * β_sum_per_led[n,led_indice_user] 
+                    / (
+                        h_user_rec[n,led_indice_user]^2 
+                        * ps[ps_index] 
+                        * sum(β_sum_per_led[n+1:user_num,led_indice_user])
+                        + (sum(h_user_rec[n,:]) - h_user_rec[n,led_indice_user])^2 * ps[ps_index] + n0))
                 # println((1 - β)^(s - 1) - β_sum_per_led[i])
 
                 capacity_user += 0.5 * log2(1 + user_SINR)
-                # eve
-                # if h_eve[led_indice_user] != 0.0
-                #     eve_SINR = (h_eve[led_indice_user]^2 * ps * β_sum_per_led[led_indice_user]
-                #     / (h_eve[led_indice_user]^2 * ps * ((1 - β)^(user_num_per_led[led_indice_user] - 1) - β_sum_per_led[led_indice_user]) 
-                #         + (sum(h_eve) - h_eve[led_indice_user])^2 * ps + n0))
-                # else
-                #     eve_SINR = 0.0
-                # end
-                # capacity_eve += 0.5 * log2(1 + eve_SINR)
-
-                
-                capacity_user += 0.5 * log2(1 + user_SINR)
-                # capacity_eve += 0.5 * log2(1 + eve_SINR)
             end
             
             sum_user += capacity_user
