@@ -100,7 +100,8 @@ def main(argv):
     # print(z)
 
 
-    fig, axes = plt.subplots(subplot_kw=dict(projection='3d'))
+    fig = plt.figure(figsize=(8,6),constrained_layout=True)
+    axes = fig.gca(projection='3d')
     norm = plt.Normalize(z.min(),z.max())
     colors = cm.jet(norm(z))
 
@@ -138,8 +139,8 @@ def main(argv):
         spine.set_visible(False)
     fig.tight_layout()
     fig.subplots_adjust(left=-0.11)
-    plt.savefig(str(res)+ '.png',dpi=300)
-    plt.savefig(str(res)+ '.eps',dpi=300)
+    plt.savefig(str(res)+ '.png',dpi=300,bbox_inches='tight')
+    plt.savefig(str(res)+ '.eps',dpi=300,bbox_inches='tight')
     # plt.show()
     
 if __name__ == '__main__':

@@ -5,7 +5,7 @@ using LinearAlgebra: norm
 using Distributions: Uniform
 
 # local libraries
-include("ProjectVLC.jl")
+include("src/ProjectVLC.jl")
 
 import .ProjectVLC.Channels: phi_rad, vlc_channel, theta_deg, shadow_check
 import .ProjectVLC.Parameters: ψ_c, ψ_05, I_DC, Nb, u_r, A_PD, β, η, height, device_height, N0, height_user_body, shoulder_width, led, user_coop

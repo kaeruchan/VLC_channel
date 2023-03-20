@@ -70,13 +70,13 @@ module Channels
             IEEE Trans. Commun., vol. 67, no. 3, pp. 2157- 2172, Mar. 2019.
         =#
         laplace_mean_sit = 41.39
-        laplace_var_sit = 7.68
+        laplace_var_sit = 7.68^2
         laplace_mean_walk = 29.74
-        laplace_var_walk = 8.59
+        laplace_var_walk = 8.59^2
         gaussian_mean_sit = 41.23
-        gaussian_var_sit = 7.18
+        gaussian_var_sit = 7.18^2
         gaussian_mean_walk = 29.67
-        gaussian_var_walk = 7.78
+        gaussian_var_walk = 7.78^2
 
         wrong_type_msg = "Wrong type! Please fix it."
         wrong_fit_msg = "Wrong fit type! Please fix it."

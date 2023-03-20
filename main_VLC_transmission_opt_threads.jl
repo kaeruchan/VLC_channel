@@ -10,7 +10,7 @@ using Distributions: Uniform
 using ProgressBars
 
 # local libraries
-include("ProjectVLC.jl")
+include("src/ProjectVLC.jl")
 
 import .ProjectVLC.Channels: phi_rad, vlc_channel, theta_deg, shadow_check, phi_rad_est
 import .ProjectVLC.Parameters: ψ_c, ψ_05, I_DC, Nb, u_r, A_PD, β, η, height, device_height, N0, height_user_body, shoulder_width, led, user_coop
@@ -43,7 +43,7 @@ function main()
     secrecy_simu = zeros(length(ps))
 
     user_d_matrix = zeros(user_num,led_num)
-    # eve_d_matrix = zeros(led_num)
+    eve_d_matrix = zeros(led_num)
     user_psi_matrix = zeros(user_num,led_num)
     user_psi_matrix_est = zeros(user_num,led_num)
     user_body = zeros(user_num,3)
@@ -64,7 +64,7 @@ function main()
             y_eve = rand(Uniform(1,39))
             eve = [x_eve,y_eve,device_height]
             user_led_block = ones(user_num,led_num)
-            # eve_led_block = ones(led_num)
+            eve_led_block = ones(led_num)
             # calculate distance,phi between users,eve and led
             user_omega_deg = rand(Uniform(-180,180),user_num)
 

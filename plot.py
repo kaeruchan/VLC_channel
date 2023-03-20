@@ -99,7 +99,7 @@ def main(argv):
     #     [34.1,7.8]
     # ])
 
-    fig, axes = plt.subplots(figsize=(8,6))
+    fig, axes = plt.subplots(figsize=(8,8))
 
     axes.set_xlim([0,40])
     axes.set_ylim([0,40])

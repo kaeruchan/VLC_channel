@@ -9,7 +9,7 @@ module Parameters
     export N0
     export height_user_body, shoulder_width, device_body
     export x_eve, y_eve
-    export led, user_coop, led_com
+    export led, user_coop, led_com, led_com_to_led_ratio
 
     using Base: fill
 
@@ -43,6 +43,8 @@ module Parameters
     led = hcat(file_read("led"),fill(height,size(file_read("led"),1)))
 
     led_com = hcat(file_read_com("led"),fill(height,size(file_read_com("led"),1)))
+
+    led_com_to_led_ratio = size(led,1) / size(led_com,1)
 
     function user_coop(usr_type::Int64)
         return hcat(file_read("user", user_type=usr_type),fill(device_height,size(file_read("user", user_type=usr_type),1)))
