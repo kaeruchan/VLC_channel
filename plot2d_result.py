@@ -151,15 +151,15 @@ def main(argv):
              markersize = 10,
              label = 'Broadcast, Scenario 2'
     )
-    # plt.plot(x_1_3,
-    #          y_1_3,
-    #          color = matlabcolormap.yellow,
-    #          linestyle = '-',
-    #          marker = 'o',
-    #          markerfacecolor = 'None',
-    #          linewidth = 2,
-    #          markersize = 10,
-    #          label = 'Broadcast, Scenario 3')
+    plt.plot(x_1_3,
+             y_1_3,
+             color = matlabcolormap.yellow,
+             linestyle = '-',
+             marker = 'o',
+             markerfacecolor = 'None',
+             linewidth = 2,
+             markersize = 10,
+             label = 'Broadcast, Scenario 3')
     
     plt.plot(x_2_1,
              y_2_1,
@@ -169,7 +169,7 @@ def main(argv):
              markerfacecolor = 'None',
              linewidth = 2,
              markersize = 10,
-             label = 'LED Linking, Scenario 1'
+             label = 'Simple, Scenario 1'
     )
     plt.plot(x_2_2,
              y_2_2,
@@ -179,47 +179,47 @@ def main(argv):
              markerfacecolor = 'None',
              linewidth = 2,
              markersize = 10,
-             label = 'LED Linking, Scenario 2'
+             label = 'Simple, Scenario 2'
     )
-    # plt.plot(x_2_3,
-    #          y_2_3,
-    #          color = matlabcolormap.yellow,
-    #          linestyle = '--',
-    #          marker = '^',
-    #          markerfacecolor = 'None',
-    #          linewidth = 2,
-    #          markersize = 10,
-    #          label = 'Simple, Scenario 3')
+    plt.plot(x_2_3,
+             y_2_3,
+             color = matlabcolormap.yellow,
+             linestyle = '--',
+             marker = '^',
+             markerfacecolor = 'None',
+             linewidth = 2,
+             markersize = 10,
+             label = 'Simple, Scenario 3')
     
-    # plt.plot(x_3_1,
-    #          y_3_1,
-    #          color = matlabcolormap.red,
-    #          linestyle = ':',
-    #          marker = 's',
-    #          markerfacecolor = 'None',
-    #          linewidth = 2,
-    #          markersize = 10,
-    #          label = 'Smart, Scenario 1'
-    # )
-    # plt.plot(x_3_2,
-    #          y_3_2,
-    #          color = matlabcolormap.blue,
-    #          linestyle = ':',
-    #          marker = 's',
-    #          markerfacecolor = 'None',
-    #          linewidth = 2,
-    #          markersize = 10,
-    #          label = 'Smart, Scenario 2'
-    # )
-    # plt.plot(x_3_3,
-    #          y_3_3,
-    #          color = matlabcolormap.yellow,
-    #          linestyle = ':',
-    #          marker = 's',
-    #          markerfacecolor = 'None',
-    #          linewidth = 2,
-    #          markersize = 10,
-    #          label = 'Smart, Scenario 3')
+    plt.plot(x_3_1,
+             y_3_1,
+             color = matlabcolormap.red,
+             linestyle = ':',
+             marker = 's',
+             markerfacecolor = 'None',
+             linewidth = 2,
+             markersize = 10,
+             label = 'Smart, Scenario 1'
+    )
+    plt.plot(x_3_2,
+             y_3_2,
+             color = matlabcolormap.blue,
+             linestyle = ':',
+             marker = 's',
+             markerfacecolor = 'None',
+             linewidth = 2,
+             markersize = 10,
+             label = 'Smart, Scenario 2'
+    )
+    plt.plot(x_3_3,
+             y_3_3,
+             color = matlabcolormap.yellow,
+             linestyle = ':',
+             marker = 's',
+             markerfacecolor = 'None',
+             linewidth = 2,
+             markersize = 10,
+             label = 'Smart, Scenario 3')
     
 
     axes.set_xlim([0.1,1])
