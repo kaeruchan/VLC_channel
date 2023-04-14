@@ -127,7 +127,7 @@ def main(argv):
     fig.tight_layout()
     fig.subplots_adjust(left=-0.11)
     plt.savefig('LED3d_user1.png',dpi=300,bbox_inches='tight')
-    plt.savefig('LED3d_user1.eps',dpi=300,bbox_inches='tight')
+    plt.savefig('LED3d_user1.pdf',dpi=300,bbox_inches='tight')
     # plt.show()
     
 if __name__ == '__main__':

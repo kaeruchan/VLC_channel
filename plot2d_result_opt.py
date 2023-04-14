@@ -347,7 +347,7 @@ def main(argv):
                 # bbox_to_anchor=(1, 0.5)
                 )
     axes.set_xlabel('Transmission power $P_s$~(W)', fontdict={'size': 16})
-    axes.set_ylabel('Sum rate of users~(bit/hz/sec)', fontdict={'size': 16})
+    axes.set_ylabel('Transmission sum rate~(bit/hz/sec)', fontdict={'size': 16})
     # if res == 'sec':
     #     zlabel = 'Secrecy Capacity'
     # elif res == 'eve':
@@ -363,7 +363,7 @@ def main(argv):
     # fig.tight_layout()
     # fig.subplots_adjust(left=-0.11)
     plt.savefig(str(res)+ '_' + str(strategy) + '_opt.png',bbox_inches='tight',dpi=300)
-    plt.savefig(str(res)+ '_' + str(strategy) + '_opt.eps',bbox_inches='tight',dpi=300)
+    plt.savefig(str(res)+ '_' + str(strategy) + '_opt.pdf',bbox_inches='tight',dpi=300)
     # plt.show()
     
 if __name__ == '__main__':

@@ -141,6 +141,7 @@ def main(argv):
     fig.subplots_adjust(left=-0.11)
     plt.savefig(str(res)+ '.png',dpi=300,bbox_inches='tight')
     plt.savefig(str(res)+ '.eps',dpi=300,bbox_inches='tight')
+    plt.savefig(str(res)+ '.pdf',dpi=300,bbox_inches='tight')
     # plt.show()
     
 if __name__ == '__main__':

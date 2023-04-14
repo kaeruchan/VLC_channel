@@ -360,7 +360,7 @@ def main(argv):
              markerfacecolor = 'None',
              linewidth = 2,
              markersize = 10,
-             label = 'LED arragement shape in [23]'
+             label = 'LED arragement shape in [22]'
     )
 
     axes1.set_xlim([0.1,1])
@@ -391,17 +391,17 @@ def main(argv):
     # fig.colorbar(surf, shrink=.5, aspect=5)
     # box = axes.get_position()
     # axes.set_position([box.x0, box.y0, box.width * 0.8, box.height])
-    fig.legend(loc="outside right", 
+    fig.legend(loc="outside upper center", 
                 # borderaxespad=1, 
                 fontsize=10,
                 # bbox_to_anchor=(1, 0.5)
                 )
     axes1.set_xlabel('$P_s$~(W)', fontdict={'size': 14})
-    axes1.set_ylabel('Sum rate of users~(bit/hz/sec)', fontdict={'size': 14})
+    axes1.set_ylabel('Transmission sum rate~(bit/hz/sec)', fontdict={'size': 14})
     axes2.set_xlabel('$P_s$~(W)', fontdict={'size': 14})
-    axes2.set_ylabel('Sum rate of users~(bit/hz/sec)', fontdict={'size': 14})
+    axes2.set_ylabel('Transmission sum rate~(bit/hz/sec)', fontdict={'size': 14})
     axes3.set_xlabel('$P_s$~(W)', fontdict={'size': 14})
-    axes3.set_ylabel('Sum rate of users~(bit/hz/sec)', fontdict={'size': 14})
+    axes3.set_ylabel('Transmission sum rate~(bit/hz/sec)', fontdict={'size': 14})
     # if res == 'sec':
     #     zlabel = 'Secrecy Capacity'
     # elif res == 'eve':
@@ -417,7 +417,7 @@ def main(argv):
     # fig.tight_layout()
     # fig.subplots_adjust(left=-0.11)
     plt.savefig(str(res)+ '_com.png',bbox_inches='tight',dpi=300)
-    plt.savefig(str(res)+ '_com.eps',bbox_inches='tight',dpi=300)
+    plt.savefig(str(res)+ '_com.pdf',bbox_inches='tight',dpi=300)
     # plt.show()
     
 if __name__ == '__main__':
